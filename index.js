@@ -6,19 +6,19 @@ bot.command("/hello", ctx => {
   ctx.reply("How are you doing?");
 });
 
-// bot.startWebhook(
-//   "/d3cf3429a76b8ef1d2d94d826c27a7e2a04e8f10d5c6ec494e2055baea9bef17",
-//   null,
-//   4500
-// );
-// bot.telegram.setWebhook(
-//   "https://tfs-observer-telegram-bot.herokuapp.com/telegraf/d3cf3429a76b8ef1d2d94d826c27a7e2a04e8f10d5c6ec494e2055baea9bef17"
-// );
+bot.telegram.setWebhook(
+  "https://tfs-observer-telegram-bot.herokuapp.com/telegraf/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9"
+);
+
+bot.startWebhook(
+  "/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9",
+  null,
+  4500
+);
 
 bot.launch({
   webhook: {
-    domain:
-      "https://tfs-observer-telegram-bot.herokuapp.com/",
+    domain: "https://tfs-observer-telegram-bot.herokuapp.com/",
     port: 4500
   }
 });
