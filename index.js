@@ -8,6 +8,14 @@ bot.command("/hello", ctx => {
 
 bot.use(async (ctx, next) => {
   console.log("ctx.update", ctx.update);
+  const {
+    message: { text, html },
+    resource: { url }
+  } = ctx.update;
+
+  await ctx.reply("Text:" + text);
+  await ctx.reply("HTML:" + html);
+  await ctx.reply("Url:" + url);
 
   await next();
 });
