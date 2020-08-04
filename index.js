@@ -16,9 +16,9 @@ bot.startWebhook(
   4500
 );
 
-bot.launch({
-  webhook: {
-    domain: "https://tfs-observer-telegram-bot.herokuapp.com/",
-    port: 4500
-  }
-});
+// bot.launch({
+//   webhook: {
+//     domain: "https://tfs-observer-telegram-bot.herokuapp.com/",
+//     port: 4500
+//   }
+// });
