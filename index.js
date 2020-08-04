@@ -6,6 +6,12 @@ bot.command("/hello", ctx => {
   ctx.reply("How are you doing?");
 });
 
+bot.use(async (ctx, next) => {
+  console.log("ctx", ctx);
+
+  await next();
+});
+
 bot.telegram.setWebhook(
   "https://tfs-observer-telegram-bot.herokuapp.com/telegraf/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9"
 );
@@ -15,10 +21,3 @@ bot.startWebhook(
   null,
   process.env.PORT
 );
-
-// bot.launch({
-//   webhook: {
-//     domain: "https://tfs-observer-telegram-bot.herokuapp.com/",
-//     port: 4500
-//   }
-// });
