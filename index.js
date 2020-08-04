@@ -10,7 +10,7 @@ bot.command("/hello", ctx => {
   ctx.reply("How are you doing?");
 });
 
-bot.on("message", async ctx => {
+bot.on("text", async function(ctx) {
   const { publisherId, message: { text, html } = {}, resource: { url } = {} } =
     ctx.update || {};
   if (publisherId !== "tfs") {
@@ -21,8 +21,8 @@ bot.on("message", async ctx => {
   console.log("ctx.update", ctx.update);
 
   //await ctx.reply("Text:" + text);
-  await ctx.replyWithHTML(`HTML:${html}`);
-  await ctx.replyWithHTML("Url:" + url);
+  await ctx.reply(`HTML:${html}`);
+  await ctx.reply("Url:" + url);
 
   //await next();
 });
