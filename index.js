@@ -6,7 +6,7 @@ bot.command("/hello", ctx => {
   ctx.reply("How are you doing?");
 });
 
-bot.on("message", async (ctx, next) => {
+bot.on("message", async ctx => {
   const { publisherId, message: { text, html } = {}, resource: { url } = {} } =
     ctx.update || {};
   if (publisherId !== "tfs") {
@@ -20,7 +20,7 @@ bot.on("message", async (ctx, next) => {
   await ctx.replyWithHTML(`HTML:${html}`);
   await ctx.replyWithHTML("Url:" + url);
 
-  await next();
+  //await next();
 });
 
 bot.telegram.setWebhook(
