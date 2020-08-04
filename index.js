@@ -7,6 +7,7 @@ bot.command("/hello", ctx => {
 });
 
 bot.use(async (ctx, next) => {
+  console.log("ctx", ctx);
   console.log("ctx.update", ctx.update);
   const {
     message: { text, html },
