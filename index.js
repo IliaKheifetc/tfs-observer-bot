@@ -6,21 +6,19 @@ bot.command("/hello", ctx => {
   ctx.reply("How are you doing?");
 });
 
-bot.hears(/.*/, async (ctx, next) => {
-  const { publisherId } = ctx.update || {};
+bot.use(async (ctx, next) => {
+  const { publisherId, message: { text, html } = {}, resource: { url } = {} } =
+    ctx.update || {};
   if (publisherId !== "tfs") {
     return;
   }
+
   console.log("ctx", ctx);
   console.log("ctx.update", ctx.update);
-  const {
-    message: { text, html },
-    resource: { url }
-  } = ctx.update;
 
-  await ctx.reply("Text:" + text);
-  await ctx.reply("HTML:" + html);
-  await ctx.reply("Url:" + url);
+  //await ctx.reply("Text:" + text);
+  await ctx.replyWithHTML(`HTML:${html}`);
+  await ctx.replyWithHTML("Url:" + url);
 
   await next();
 });
