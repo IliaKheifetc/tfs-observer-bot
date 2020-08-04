@@ -1,6 +1,10 @@
 const { Telegraf } = require("telegraf");
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
+const bot = new Telegraf(process.env.BOT_TOKEN, {
+  // Telegram options
+  agent: null, // https.Agent instance, allows custom proxy, certificate, keep alive, etc.
+  webhookReply: false // Reply via webhook
+});
 
 bot.command("/hello", ctx => {
   ctx.reply("How are you doing?");
