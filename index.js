@@ -6,7 +6,7 @@ bot.command("/hello", ctx => {
   ctx.reply("How are you doing?");
 });
 
-bot.use(async (ctx, next) => {
+bot.on("message", async (ctx, next) => {
   const { publisherId, message: { text, html } = {}, resource: { url } = {} } =
     ctx.update || {};
   if (publisherId !== "tfs") {
