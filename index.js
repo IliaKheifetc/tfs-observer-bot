@@ -6,7 +6,11 @@ bot.command("/hello", ctx => {
   ctx.reply("How are you doing?");
 });
 
-bot.use(async (ctx, next) => {
+bot.hears(/.*/, async (ctx, next) => {
+  const { publisherId } = ctx.update || {};
+  if (publisherId !== "tfs") {
+    return;
+  }
   console.log("ctx", ctx);
   console.log("ctx.update", ctx.update);
   const {
