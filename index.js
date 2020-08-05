@@ -1,5 +1,5 @@
 const { Telegraf } = require("telegraf");
-const { Telegram } = require("telegraf/telegram");
+const Telegram = require("telegraf/telegram");
 const express = require("express");
 
 const telegram = new Telegram(process.env.BOT_TOKEN);
