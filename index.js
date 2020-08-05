@@ -2,13 +2,15 @@ const { Telegraf } = require("telegraf");
 const Telegram = require("telegraf/telegram");
 const express = require("express");
 
-const telegram = new Telegram(process.env.BOT_TOKEN);
+const { BOT_TOKEN, DEFAULT_CHAT_IDS, PORT } = process.env;
 
-let chatsToNotify = [];
+const telegram = new Telegram(BOT_TOKEN);
+
+let chatsToNotify = DEFAULT_CHAT_IDS ? [...DEFAULT_CHAT_IDS.split(",")] : [];
 
 const expressApp = express();
 
-const bot = new Telegraf(process.env.BOT_TOKEN, {
+const bot = new Telegraf(BOT_TOKEN, {
   // Telegram options
   agent: null, // https.Agent instance, allows custom proxy, certificate, keep alive, etc.
   webhookReply: false // Reply via webhook
@@ -23,6 +25,8 @@ bot.start(ctx => {
 bot.command("/subscribe", ctx => {
   console.log("ctx", ctx);
   const { id: chatId } = ctx.chat || {};
+
+  console.log("new chatId:", chatId);
 
   if (!chatsToNotify.includes(chatId)) {
     chatsToNotify.push(chatId);
@@ -40,9 +44,6 @@ bot.on("text", async function(ctx) {
   console.log("ctx", ctx);
   console.log("ctx.update", ctx.update);
 
-  //await ctx.reply("Text:" + text);
-  // await ctx.reply(`HTML:${html}`);
-  // await ctx.reply("Url:" + url);
   try {
     chatsToNotify.forEach(async chatId => {
       await telegram.sendMessage(chatId, `HTML:${html}`, {
@@ -52,19 +53,11 @@ bot.on("text", async function(ctx) {
   } catch (e) {
     console.error("error", e);
   }
-
-  //await next();
 });
 
 bot.telegram.setWebhook(
   "https://tfs-observer-telegram-bot.herokuapp.com/telegraf/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9"
 );
-
-// bot.startWebhook(
-//   "/telegraf/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9",
-//   null,
-//   process.env.PORT
-// );
 
 expressApp.get("/", (req, res) => res.send("Hello World!"));
 expressApp.use(
@@ -73,6 +66,6 @@ expressApp.use(
   )
 );
 
-expressApp.listen(process.env.PORT, () => {
-  console.log(`app listening on port ${process.env.PORT}!`);
+expressApp.listen(PORT, () => {
+  console.log(`app listening on port ${PORT}!`);
 });
