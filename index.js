@@ -4,7 +4,7 @@ const express = require("express");
 
 const telegram = new Telegram(process.env.BOT_TOKEN);
 
-let chatId;
+let chatsToNotify = [];
 
 const expressApp = express();
 
@@ -14,10 +14,22 @@ const bot = new Telegraf(process.env.BOT_TOKEN, {
   webhookReply: false // Reply via webhook
 });
 
-bot.command("/hello", ctx => {
+bot.start(ctx => {
+  ctx.reply(
+    "Используйте команду /subscribe, чтобы подписаться на уведомление об изменениях"
+  );
+});
+
+bot.command("/subscribe", ctx => {
   console.log("ctx", ctx);
-  chatId = ctx.chat.id;
-  ctx.reply("How are you doing?");
+  const {
+    chat: { id: chatId }
+  } = ctx.chat || {};
+
+  if (!chatsToNotify.includes(chatId)) {
+    chatsToNotify.push(chatId);
+  }
+  ctx.reply("Вы успешно подписались");
 });
 
 bot.on("text", async function(ctx) {
@@ -34,7 +46,11 @@ bot.on("text", async function(ctx) {
   // await ctx.reply(`HTML:${html}`);
   // await ctx.reply("Url:" + url);
   try {
-    await telegram.sendMessage(chatId, `HTML:${html}`, { parse_mode: "HTML" });
+    chatsToNotify.forEach(async chatId => {
+      await telegram.sendMessage(chatId, `HTML:${html}`, {
+        parse_mode: "HTML"
+      });
+    });
   } catch (e) {
     console.error("error", e);
   }
