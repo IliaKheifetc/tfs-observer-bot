@@ -1,5 +1,10 @@
 const { Telegraf } = require("telegraf");
+const { Telegram } = require("telegraf/telegram");
 const express = require("express");
+
+const telegram = new Telegram(process.env.BOT_TOKEN);
+
+let chatId;
 
 const expressApp = express();
 
@@ -10,6 +15,8 @@ const bot = new Telegraf(process.env.BOT_TOKEN, {
 });
 
 bot.command("/hello", ctx => {
+  console.log("ctx", ctx);
+  chatId = ctx.chat.id;
   ctx.reply("How are you doing?");
 });
 
@@ -24,8 +31,13 @@ bot.on("text", async function(ctx) {
   console.log("ctx.update", ctx.update);
 
   //await ctx.reply("Text:" + text);
-  await ctx.reply(`HTML:${html}`);
-  await ctx.reply("Url:" + url);
+  // await ctx.reply(`HTML:${html}`);
+  // await ctx.reply("Url:" + url);
+  try {
+    await telegram.sendMessage(chatId, `HTML:${html}`, { parse_mode: "HTML" });
+  } catch (e) {
+    console.error("error", e);
+  }
 
   //await next();
 });
