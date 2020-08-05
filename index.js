@@ -17,6 +17,8 @@ const bot = new Telegraf(BOT_TOKEN, {
 });
 
 bot.start(ctx => {
+  console.log("default chats to notify:", chatsToNotify);
+
   ctx.reply(
     "Используйте команду /subscribe, чтобы подписаться на уведомление об изменениях"
   );
