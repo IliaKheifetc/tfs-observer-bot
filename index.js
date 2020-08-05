@@ -22,9 +22,7 @@ bot.start(ctx => {
 
 bot.command("/subscribe", ctx => {
   console.log("ctx", ctx);
-  const {
-    chat: { id: chatId }
-  } = ctx.chat || {};
+  const { id: chatId } = ctx.chat || {};
 
   if (!chatsToNotify.includes(chatId)) {
     chatsToNotify.push(chatId);
