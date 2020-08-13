@@ -62,6 +62,19 @@ bot.telegram.setWebhook(
 );
 
 expressApp.get("/", (req, res) => res.send("Hello World!"));
+
+expressApp.post("/deploymentComplete", (req, res) => {
+  console.log("req.body", req.body);
+
+  chatsToNotify.forEach(async chatId => {
+    await telegram.sendMessage(chatId, "Neptune deployment completed", {
+      parse_mode: "HTML"
+    });
+  });
+
+  res.status(200).end();
+});
+
 expressApp.use(
   bot.webhookCallback(
     "/telegraf/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9"
