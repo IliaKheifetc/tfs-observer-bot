@@ -63,7 +63,7 @@ bot.telegram.setWebhook(
 
 expressApp.get("/", (req, res) => res.send("Hello World!"));
 
-expressApp.post("/deploymentComplete", (req, res) => {
+expressApp.post("/deploymentCompleted", (req, res) => {
   console.log("req.body", req.body);
 
   chatsToNotify.forEach(async chatId => {
