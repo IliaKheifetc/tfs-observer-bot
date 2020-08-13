@@ -72,11 +72,16 @@ expressApp.get("/", (req, res) => res.send("Hello World!"));
 
 expressApp.post("/deploymentCompleted", (req, res) => {
   console.log("req.body", req.body);
+  const { createdDate, detailedMessage } = req.body;
 
   chatsToNotify.forEach(async chatId => {
-    await telegram.sendMessage(chatId, "Neptune deployment completed", {
-      parse_mode: "HTML"
-    });
+    await telegram.sendMessage(
+      chatId,
+      `${detailedMessage.html}\n${createdDate}`,
+      {
+        parse_mode: "HTML"
+      }
+    );
   });
 
   res.status(200).end();
