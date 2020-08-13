@@ -1,7 +1,6 @@
 const { Telegraf } = require("telegraf");
 const Telegram = require("telegraf/telegram");
 const express = require("express");
-const bodyParser = require("body-parser");
 
 const { BOT_TOKEN, DEFAULT_CHAT_IDS, PORT } = process.env;
 
@@ -81,7 +80,7 @@ expressApp.use(
     "/telegraf/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9"
   )
 );
-expressApp.use(bodyParser.json());
+expressApp.use(express.json());
 
 expressApp.listen(PORT, () => {
   console.log(`app listening on port ${PORT}!`);
