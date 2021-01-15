@@ -6,7 +6,9 @@ const { BOT_TOKEN, DEFAULT_CHAT_IDS, PORT } = process.env;
 
 const telegram = new Telegram(BOT_TOKEN);
 
-let chatsToNotify = DEFAULT_CHAT_IDS ? [...DEFAULT_CHAT_IDS.split(",")] : [];
+let chatsToNotify = DEFAULT_CHAT_IDS
+  ? [...DEFAULT_CHAT_IDS.split(",").map(item => item.trim())]
+  : [];
 
 const expressApp = express();
 
