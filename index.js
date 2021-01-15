@@ -99,10 +99,12 @@ expressApp.post("/pullRequestCommentPosted", (req, res) => {
     }
   } = req.body;
 
+  const formattedDate = new Date(publishedDate).toLocaleString();
+
   chatsToNotify.slice(0, 2).forEach(async chatId => {
     await telegram.sendMessage(
       chatId,
-      `${html}: "${content}", \n${publishedDate}`,
+      `${html}: "${content}", \n${formattedDate}`,
       {
         parse_mode: "HTML"
       }
