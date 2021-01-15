@@ -93,16 +93,20 @@ expressApp.post("/pullRequestCommentPosted", (req, res) => {
   console.log("req.body", req.body);
   const {
     createdDate,
-    detailedMessage: { html },
+    message: { html },
     resource: {
       comment: { author, content, publishedDate }
     }
   } = req.body;
 
   chatsToNotify.slice(0, 2).forEach(async chatId => {
-    await telegram.sendMessage(chatId, `${html}\n${publishedDate}`, {
-      parse_mode: "HTML"
-    });
+    await telegram.sendMessage(
+      chatId,
+      `${html}: "${content}", \n${publishedDate}`,
+      {
+        parse_mode: "HTML"
+      }
+    );
   });
 
   res.status(200).end();
