@@ -89,6 +89,23 @@ expressApp.post("/deploymentCompleted", (req, res) => {
   res.status(200).end();
 });
 
+expressApp.post("/pullRequestCommentPosted", (req, res) => {
+  console.log("req.body", req.body);
+  const { createdDate, detailedMessage } = req.body;
+
+  // chatsToNotify.slice(0, 2).forEach(async chatId => {
+  //   await telegram.sendMessage(
+  //     chatId,
+  //     `${detailedMessage.html}\n${createdDate}`,
+  //     {
+  //       parse_mode: "HTML"
+  //     }
+  //   );
+  // });
+
+  res.status(200).end();
+});
+
 expressApp.listen(PORT, () => {
   console.log(`app listening on port ${PORT}!`);
 });
