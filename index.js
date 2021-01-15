@@ -91,17 +91,19 @@ expressApp.post("/deploymentCompleted", (req, res) => {
 
 expressApp.post("/pullRequestCommentPosted", (req, res) => {
   console.log("req.body", req.body);
-  const { createdDate, detailedMessage } = req.body;
+  const {
+    createdDate,
+    detailedMessage: { html },
+    resource: {
+      comment: { author, content, publishedDate }
+    }
+  } = req.body;
 
-  // chatsToNotify.slice(0, 2).forEach(async chatId => {
-  //   await telegram.sendMessage(
-  //     chatId,
-  //     `${detailedMessage.html}\n${createdDate}`,
-  //     {
-  //       parse_mode: "HTML"
-  //     }
-  //   );
-  // });
+  chatsToNotify.slice(0, 2).forEach(async chatId => {
+    await telegram.sendMessage(chatId, `${html}\n${publishedDate}`, {
+      parse_mode: "HTML"
+    });
+  });
 
   res.status(200).end();
 });
