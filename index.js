@@ -1,6 +1,7 @@
 const { Telegraf } = require("telegraf");
 const Telegram = require("telegraf/telegram");
 const express = require("express");
+const moment = require("moment-timezone");
 
 const { BOT_TOKEN, DEFAULT_CHAT_IDS, PORT } = process.env;
 
@@ -99,7 +100,9 @@ expressApp.post("/pullRequestCommentPosted", (req, res) => {
     }
   } = req.body;
 
-  const formattedDate = new Date(publishedDate).toLocaleString();
+  const formattedDate = moment(publishedDate)
+    .tz("Europe/Moscow")
+    .format("DD.MM.YYYY HH:mm");
 
   chatsToNotify.slice(0, 2).forEach(async chatId => {
     await telegram.sendMessage(
