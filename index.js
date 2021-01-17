@@ -63,7 +63,7 @@ bot.command("/subscribe", ctx => {
   }
 
   try {
-    fetchGraphQL(addSubscriber, "addSubscriber", {
+    fetchGraphQL(addSubscriber, "ModifySubscribers", {
       objects: [
         {
           id: subscribers.length + 1,
