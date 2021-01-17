@@ -15,6 +15,7 @@
     "express": "^4.17.1",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.32",
+    "node-fetch": "^2.6.1",
     "telegraf": "^3.38.0"
   }
 }

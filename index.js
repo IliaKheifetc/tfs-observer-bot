@@ -1,15 +1,34 @@
 const { Telegraf } = require("telegraf");
 const Telegram = require("telegraf/telegram");
 const express = require("express");
-const moment = require("moment-timezone");
+
+const { fetchGraphQL } = require("./fetchFromApi");
+const { getSubscribers } = require("./queries");
+const { formatDate } = require("./utils");
 
 const { BOT_TOKEN, DEFAULT_CHAT_IDS, PORT } = process.env;
 
 const telegram = new Telegram(BOT_TOKEN);
 
-let chatsToNotify = DEFAULT_CHAT_IDS
-  ? [...DEFAULT_CHAT_IDS.split(",").map(item => item.trim())]
-  : [];
+// let chatsToNotify = DEFAULT_CHAT_IDS
+//   ? [...DEFAULT_CHAT_IDS.split(",").map(item => item.trim())]
+//   : [];
+
+let subscribers = [];
+
+const initChatsToNotify = async () => {
+  try {
+    const { data } = await fetchGraphQL(getSubscribers, "MyQuery");
+
+    subscribers = data ? data.subscribers : [];
+
+    console.log({ subscribers });
+  } catch (e) {
+    console.error("error", e);
+  }
+};
+
+initChatsToNotify();
 
 const expressApp = express();
 
@@ -24,7 +43,7 @@ bot.telegram.setWebhook(
 );
 
 bot.start(ctx => {
-  console.log("default chats to notify:", chatsToNotify);
+  console.log("subscribers to notify:", subscribers);
 
   ctx.reply(
     "Используйте команду /subscribe, чтобы подписаться на уведомление об изменениях"
@@ -37,9 +56,11 @@ bot.command("/subscribe", ctx => {
 
   console.log("new chatId:", chatId);
 
-  if (!chatsToNotify.includes(chatId)) {
-    chatsToNotify.push(chatId);
+  // todo use appropriate mutation here!
+  if (!subscribers.some(subscriber => subscriber.chatId === chatId)) {
+    subscribers.push({ chatId });
   }
+
   ctx.reply("Вы успешно подписались");
 });
 
@@ -54,8 +75,8 @@ bot.on("text", async function(ctx) {
   console.log("ctx.update", ctx.update);
 
   try {
-    chatsToNotify.forEach(async chatId => {
-      await telegram.sendMessage(chatId, `HTML:${html}`, {
+    subscribers.forEach(async subscriber => {
+      await telegram.sendMessage(subscriber.chatId, `HTML:${html}`, {
         parse_mode: "HTML"
       });
     });
@@ -77,9 +98,9 @@ expressApp.post("/deploymentCompleted", (req, res) => {
   console.log("req.body", req.body);
   const { createdDate, detailedMessage } = req.body;
 
-  chatsToNotify.forEach(async chatId => {
+  subscribers.forEach(async subscriber => {
     await telegram.sendMessage(
-      chatId,
+      subscriber.chatId,
       `${detailedMessage.html}\n${createdDate}`,
       {
         parse_mode: "HTML"
@@ -100,13 +121,11 @@ expressApp.post("/pullRequestCommentPosted", (req, res) => {
     }
   } = req.body;
 
-  const formattedDate = moment(publishedDate)
-    .tz("Europe/Moscow")
-    .format("DD.MM.YYYY HH:mm");
+  const formattedDate = formatDate(publishedDate);
 
-  chatsToNotify.slice(0, 2).forEach(async chatId => {
+  subscribers.slice(0, 2).forEach(async subscriber => {
     await telegram.sendMessage(
-      chatId,
+      subscriber.chatId,
       `${html}: "${content}", \n${formattedDate}`,
       {
         parse_mode: "HTML"
@@ -117,6 +136,6 @@ expressApp.post("/pullRequestCommentPosted", (req, res) => {
   res.status(200).end();
 });
 
-expressApp.listen(PORT, () => {
+expressApp.listen(PORT, async () => {
   console.log(`app listening on port ${PORT}!`);
 });
