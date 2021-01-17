@@ -64,7 +64,7 @@ bot.command("/subscribe", ctx => {
 
   try {
     fetchGraphQL(addSubscriber, "addSubscriber", {
-      id: subscribers.length,
+      id: subscribers.length + 1,
       chatId,
       name: "new_subscriber"
     });
