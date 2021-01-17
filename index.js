@@ -64,9 +64,13 @@ bot.command("/subscribe", ctx => {
 
   try {
     fetchGraphQL(addSubscriber, "addSubscriber", {
-      id: subscribers.length + 1,
-      chatId,
-      name: "new_subscriber"
+      objects: [
+        {
+          id: subscribers.length + 1,
+          chatId,
+          name: "new_subscriber"
+        }
+      ]
     });
   } catch (e) {
     console.error("error", e);

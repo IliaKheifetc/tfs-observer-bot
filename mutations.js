@@ -1,4 +1,4 @@
-const addSubscriber = `mutation addSubscriber($objects: [subscribers_insert_input!]!) {
+const addSubscriber = `mutation ModifySubscribers($objects: [subscribers_insert_input!]!) {
   insert_subscribers(objects: $objects) {
     id
     name
