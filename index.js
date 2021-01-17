@@ -4,6 +4,7 @@ const express = require("express");
 
 const { fetchGraphQL } = require("./fetchFromApi");
 const { getSubscribers } = require("./queries");
+const { addSubscriber } = require("./mutations");
 const { formatDate } = require("./utils");
 
 const { BOT_TOKEN, DEFAULT_CHAT_IDS, PORT } = process.env;
@@ -59,6 +60,16 @@ bot.command("/subscribe", ctx => {
   // todo use appropriate mutation here!
   if (!subscribers.some(subscriber => subscriber.chatId === chatId)) {
     subscribers.push({ chatId });
+  }
+
+  try {
+    fetchGraphQL(addSubscriber, "addSubscriber", {
+      id: subscribers.length,
+      chatId,
+      name: "new_subscriber"
+    });
+  } catch (e) {
+    console.error("error", e);
   }
 
   ctx.reply("Вы успешно подписались");
