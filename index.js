@@ -114,13 +114,20 @@ expressApp.post("/deploymentCompleted", (req, res) => {
   const { createdDate, detailedMessage } = req.body;
 
   subscribers.forEach(async subscriber => {
-    await telegram.sendMessage(
-      subscriber.chatId,
-      `${detailedMessage.html}\n${createdDate}`,
-      {
-        parse_mode: "HTML"
-      }
-    );
+    try {
+      await telegram.sendMessage(
+        subscriber.chatId,
+        `${detailedMessage.html}\n${createdDate}`,
+        {
+          parse_mode: "HTML"
+        }
+      );
+    } catch (e) {
+      console.error(
+        "error occurred when sending notification about completed deployment",
+        e
+      );
+    }
   });
 
   res.status(200).end();
@@ -139,13 +146,20 @@ expressApp.post("/pullRequestCommentPosted", (req, res) => {
   const formattedDate = formatDate(publishedDate);
 
   subscribers.slice(0, 2).forEach(async subscriber => {
-    await telegram.sendMessage(
-      subscriber.chatId,
-      `${html}: "${content}", \n${formattedDate}`,
-      {
-        parse_mode: "HTML"
-      }
-    );
+    try {
+      await telegram.sendMessage(
+        subscriber.chatId,
+        `${html}: "${content}", \n${formattedDate}`,
+        {
+          parse_mode: "HTML"
+        }
+      );
+    } catch (e) {
+      console.error(
+        "error occurred when sending notification about pr comment",
+        e
+      );
+    }
   });
 
   res.status(200).end();
