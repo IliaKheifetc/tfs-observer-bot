@@ -195,6 +195,8 @@ expressApp.post("/userStoryChanged", (req, res) => {
       fields[fieldKey].newValue === "Closed"
   );
 
+  console.log({ hasTransitionedFromStagingToClosed });
+
   if (!hasTransitionedFromStagingToClosed) {
     return;
   }
