@@ -174,6 +174,12 @@ expressApp.post("/pullRequestCommentPosted", (req, res) => {
 expressApp.post("/userStoryChanged", (req, res) => {
   console.log("userStoryChanged");
   console.log("req.body", req.body);
+
+  const { resource: { __links } = {}, fields = {} } = req.body;
+
+  console.log({ __links });
+  console.log("fields['System.State']", fields["System.State"]);
+  console.log("fields['System.BoardColumn']", fields["System.BoardColumn"]);
   // const {
   //   createdDate,
   //   message: { html },
