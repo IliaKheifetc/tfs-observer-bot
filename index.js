@@ -15,6 +15,8 @@ const telegram = new Telegram(BOT_TOKEN);
 //   ? [...DEFAULT_CHAT_IDS.split(",").map(item => item.trim())]
 //   : [];
 
+const isTest = true;
+
 let subscribers = [];
 
 const initChatsToNotify = async () => {
@@ -22,6 +24,10 @@ const initChatsToNotify = async () => {
     const { data } = await fetchGraphQL(getSubscribers, "MyQuery");
 
     subscribers = data ? data.subscribers : [];
+
+    if (isTest) {
+      subscribers = subscribers.slice(0, 2);
+    }
 
     console.log({ subscribers });
   } catch (e) {
@@ -161,6 +167,38 @@ expressApp.post("/pullRequestCommentPosted", (req, res) => {
       );
     }
   });
+
+  res.status(200).end();
+});
+
+expressApp.post("/userStoryChanged", (req, res) => {
+  console.log("req.body", req.body);
+  // const {
+  //   createdDate,
+  //   message: { html },
+  //   resource: {
+  //     comment: { author, content, publishedDate }
+  //   }
+  // } = req.body;
+
+  // const formattedDate = formatDate(publishedDate);
+  //
+  // subscribers.slice(0, 2).forEach(async subscriber => {
+  //   try {
+  //     await telegram.sendMessage(
+  //       subscriber.chatId,
+  //       `${html}: "${content}", \n${formattedDate}`,
+  //       {
+  //         parse_mode: "HTML"
+  //       }
+  //     );
+  //   } catch (e) {
+  //     console.error(
+  //       "error occurred when sending notification about pr comment",
+  //       e
+  //     );
+  //   }
+  // });
 
   res.status(200).end();
 });
