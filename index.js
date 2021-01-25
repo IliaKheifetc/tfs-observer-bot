@@ -183,7 +183,7 @@ expressApp.post("/userStoryChanged", (req, res) => {
   console.log({ _links });
   console.log("fields['System.State']", fields["System.State"]);
   console.log("fields['System.BoardColumn']", fields["System.BoardColumn"]);
-  for (let prop of fields) {
+  for (let prop in fields) {
     console.log({ prop });
     console.log("fields[prop]", fields[prop]);
   }
