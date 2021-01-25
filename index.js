@@ -175,37 +175,42 @@ expressApp.post("/userStoryChanged", (req, res) => {
   console.log("userStoryChanged");
   console.log("req.body", req.body);
 
-  const { resource: { _links, fields = {} } = {} } = req.body;
+  const {
+    message: { html } = {},
+    resource: { _links, fields = {} } = {}
+  } = req.body;
 
   console.log({ _links });
   console.log("fields['System.State']", fields["System.State"]);
   console.log("fields['System.BoardColumn']", fields["System.BoardColumn"]);
-  // const {
-  //   createdDate,
-  //   message: { html },
-  //   resource: {
-  //     comment: { author, content, publishedDate }
-  //   }
-  // } = req.body;
+  for (let prop of fields) {
+    console.log({ prop });
+    console.log("fields[prop]", fields[prop]);
+  }
 
-  // const formattedDate = formatDate(publishedDate);
-  //
-  // subscribers.slice(0, 2).forEach(async subscriber => {
-  //   try {
-  //     await telegram.sendMessage(
-  //       subscriber.chatId,
-  //       `${html}: "${content}", \n${formattedDate}`,
-  //       {
-  //         parse_mode: "HTML"
-  //       }
-  //     );
-  //   } catch (e) {
-  //     console.error(
-  //       "error occurred when sending notification about pr comment",
-  //       e
-  //     );
-  //   }
-  // });
+  const hasTransitionedFromStagingToClosed = Object.keys(fields).some(
+    fieldKey =>
+      fieldKey.includes("Kanban.Column") &&
+      fields[fieldKey].oldValue === "Staging" &&
+      fields[fieldKey].newValue === "Closed"
+  );
+
+  if (!hasTransitionedFromStagingToClosed) {
+    return;
+  }
+
+  subscribers.forEach(async subscriber => {
+    try {
+      await telegram.sendMessage(subscriber.chatId, `${html}: `, {
+        parse_mode: "HTML"
+      });
+    } catch (e) {
+      console.error(
+        "error occurred when sending notification about pr comment",
+        e
+      );
+    }
+  });
 
   res.status(200).end();
 });
