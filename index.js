@@ -198,6 +198,7 @@ expressApp.post("/userStoryChanged", (req, res) => {
   console.log({ hasTransitionedFromStagingToClosed });
 
   if (!hasTransitionedFromStagingToClosed) {
+    res.status(200).end();
     return;
   }
 
