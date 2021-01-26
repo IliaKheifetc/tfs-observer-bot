@@ -7,15 +7,13 @@ const { getSubscribers } = require("./queries");
 const { addSubscriber } = require("./mutations");
 const { formatDate } = require("./utils");
 
-const { BOT_TOKEN, DEFAULT_CHAT_IDS, PORT } = process.env;
+const { BOT_TOKEN, DEFAULT_CHAT_IDS, PORT, IS_TEST = false } = process.env;
 
 const telegram = new Telegram(BOT_TOKEN);
 
 // let chatsToNotify = DEFAULT_CHAT_IDS
 //   ? [...DEFAULT_CHAT_IDS.split(",").map(item => item.trim())]
 //   : [];
-
-const isTest = true;
 
 let subscribers = [];
 
@@ -25,7 +23,10 @@ const initChatsToNotify = async () => {
 
     subscribers = data ? data.subscribers : [];
 
-    if (isTest) {
+    console.log({ IS_TEST });
+    console.log(typeof IS_TEST);
+
+    if (IS_TEST) {
       subscribers = subscribers.slice(0, 2);
     }
 
@@ -180,9 +181,8 @@ expressApp.post("/userStoryChanged", (req, res) => {
     resource: { _links, fields = {} } = {}
   } = req.body;
 
-  console.log({ _links });
-  console.log("fields['System.State']", fields["System.State"]);
-  console.log("fields['System.BoardColumn']", fields["System.BoardColumn"]);
+  //console.log({ _links });
+
   for (let prop in fields) {
     console.log({ prop });
     console.log("fields[prop]", fields[prop]);
@@ -204,12 +204,12 @@ expressApp.post("/userStoryChanged", (req, res) => {
 
   subscribers.forEach(async subscriber => {
     try {
-      await telegram.sendMessage(subscriber.chatId, `${html}: `, {
+      await telegram.sendMessage(subscriber.chatId, html, {
         parse_mode: "HTML"
       });
     } catch (e) {
       console.error(
-        "error occurred when sending notification about pr comment",
+        "error occurred when sending notification about US transition Staging -> Closed",
         e
       );
     }
