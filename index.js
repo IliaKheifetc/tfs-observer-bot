@@ -27,7 +27,9 @@ const initChatsToNotify = async () => {
   try {
     const { data } = await fetchGraphQL(getSubscribers, "MyQuery");
 
-    state.subscribers = data ? data.subscribers : [];
+    if (data && data.subscribers) {
+      state.subscribers.push(...data.subscribers);
+    }
 
     console.log({ IS_TEST });
     console.log(typeof IS_TEST);
