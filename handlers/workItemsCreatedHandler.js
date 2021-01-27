@@ -12,7 +12,8 @@ const workItemsCreatedHandler = ({ bot, state: { subscribers } }) => {
     console.log("ctx", ctx);
     console.log("ctx.update", ctx.update);
 
-    console.log("bot.telegram", bot.telegram);
+    console.log("bot.telegram.sendMessage", bot.telegram.sendMessage);
+    console.log({ subscribers });
 
     try {
       subscribers.forEach(async subscriber => {
