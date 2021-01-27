@@ -7,6 +7,10 @@ const { getSubscribers } = require("./queries");
 const { addSubscriber } = require("./mutations");
 const { formatDate } = require("./utils");
 
+const {
+  workItemsCreatedHandler
+} = require("./handlers/workItemsCreatedHandler");
+
 const { BOT_TOKEN, DEFAULT_CHAT_IDS, PORT, IS_TEST = false } = process.env;
 
 const telegram = new Telegram(BOT_TOKEN);
@@ -15,22 +19,24 @@ const telegram = new Telegram(BOT_TOKEN);
 //   ? [...DEFAULT_CHAT_IDS.split(",").map(item => item.trim())]
 //   : [];
 
-let subscribers = [];
+let state = {
+  subscribers: []
+};
 
 const initChatsToNotify = async () => {
   try {
     const { data } = await fetchGraphQL(getSubscribers, "MyQuery");
 
-    subscribers = data ? data.subscribers : [];
+    state.subscribers = data ? data.subscribers : [];
 
     console.log({ IS_TEST });
     console.log(typeof IS_TEST);
 
     if (IS_TEST) {
-      subscribers = subscribers.slice(0, 2);
+      state.subscribers = state.subscribers.slice(0, 2);
     }
 
-    console.log({ subscribers });
+    console.log({ subscribers: state.subscribers });
   } catch (e) {
     console.error("error", e);
   }
@@ -51,7 +57,7 @@ bot.telegram.setWebhook(
 );
 
 bot.start(ctx => {
-  console.log("subscribers to notify:", subscribers);
+  console.log("subscribers to notify:", state.subscribers);
 
   ctx.reply(
     "Используйте команду /subscribe, чтобы подписаться на уведомление об изменениях"
@@ -65,15 +71,15 @@ bot.command("/subscribe", ctx => {
   console.log("new chatId:", chatId);
 
   // todo use appropriate mutation here!
-  if (!subscribers.some(subscriber => subscriber.chatId === chatId)) {
-    subscribers.push({ chatId });
+  if (!state.subscribers.some(subscriber => subscriber.chatId === chatId)) {
+    state.subscribers.push({ chatId });
   }
 
   try {
     fetchGraphQL(addSubscriber, "ModifySubscribers", {
       objects: [
         {
-          id: subscribers.length + 1,
+          id: state.subscribers.length + 1,
           chatId,
           name: "new_subscriber"
         }
@@ -86,26 +92,7 @@ bot.command("/subscribe", ctx => {
   ctx.reply("Вы успешно подписались");
 });
 
-bot.on("text", async function(ctx) {
-  const { publisherId, message: { text, html } = {}, resource: { url } = {} } =
-    ctx.update || {};
-  if (publisherId !== "tfs") {
-    return;
-  }
-
-  console.log("ctx", ctx);
-  console.log("ctx.update", ctx.update);
-
-  try {
-    subscribers.forEach(async subscriber => {
-      await telegram.sendMessage(subscriber.chatId, `HTML:${html}`, {
-        parse_mode: "HTML"
-      });
-    });
-  } catch (e) {
-    console.error("error", e);
-  }
-});
+workItemsCreatedHandler({ bot, state });
 
 expressApp.use(
   bot.webhookCallback(
@@ -120,7 +107,7 @@ expressApp.post("/deploymentCompleted", (req, res) => {
   console.log("req.body", req.body);
   const { createdDate, detailedMessage } = req.body;
 
-  subscribers.forEach(async subscriber => {
+  state.subscribers.forEach(async subscriber => {
     try {
       await telegram.sendMessage(
         subscriber.chatId,
@@ -152,7 +139,7 @@ expressApp.post("/pullRequestCommentPosted", (req, res) => {
 
   const formattedDate = formatDate(publishedDate);
 
-  subscribers.slice(0, 2).forEach(async subscriber => {
+  state.subscribers.slice(0, 2).forEach(async subscriber => {
     try {
       await telegram.sendMessage(
         subscriber.chatId,
@@ -202,7 +189,7 @@ expressApp.post("/userStoryChanged", (req, res) => {
     return;
   }
 
-  subscribers.forEach(async subscriber => {
+  state.subscribers.forEach(async subscriber => {
     try {
       await telegram.sendMessage(subscriber.chatId, html, {
         parse_mode: "HTML"
