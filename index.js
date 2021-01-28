@@ -8,8 +8,9 @@ const { addSubscriber } = require("./mutations");
 const { formatDate } = require("./utils");
 
 const {
+  userStoryChangedHandler,
   workItemsCreatedHandler
-} = require("./handlers/workItemsCreatedHandler");
+} = require("./handlers/index");
 
 const { BOT_TOKEN, DEFAULT_CHAT_IDS, PORT, IS_TEST = false } = process.env;
 
@@ -95,6 +96,7 @@ bot.command("/subscribe", ctx => {
 });
 
 workItemsCreatedHandler({ bot, state });
+userStoryChangedHandler({ app: expressApp, bot });
 
 expressApp.use(
   bot.webhookCallback(
@@ -153,52 +155,6 @@ expressApp.post("/pullRequestCommentPosted", (req, res) => {
     } catch (e) {
       console.error(
         "error occurred when sending notification about pr comment",
-        e
-      );
-    }
-  });
-
-  res.status(200).end();
-});
-
-expressApp.post("/userStoryChanged", (req, res) => {
-  console.log("userStoryChanged");
-  console.log("req.body", req.body);
-
-  const {
-    message: { html } = {},
-    resource: { _links, fields = {} } = {}
-  } = req.body;
-
-  //console.log({ _links });
-
-  for (let prop in fields) {
-    console.log({ prop });
-    console.log("fields[prop]", fields[prop]);
-  }
-
-  const hasTransitionedFromStagingToClosed = Object.keys(fields).some(
-    fieldKey =>
-      fieldKey.includes("Kanban.Column") &&
-      fields[fieldKey].oldValue === "Staging" &&
-      fields[fieldKey].newValue === "Closed"
-  );
-
-  console.log({ hasTransitionedFromStagingToClosed });
-
-  if (!hasTransitionedFromStagingToClosed) {
-    res.status(200).end();
-    return;
-  }
-
-  state.subscribers.forEach(async subscriber => {
-    try {
-      await telegram.sendMessage(subscriber.chatId, html, {
-        parse_mode: "HTML"
-      });
-    } catch (e) {
-      console.error(
-        "error occurred when sending notification about US transition Staging -> Closed",
         e
       );
     }
