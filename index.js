@@ -1,6 +1,9 @@
 const { Telegraf } = require("telegraf");
 const Telegram = require("telegraf/telegram");
-const express = require("express");
+//const express = require("express");
+const fastify = require("fastify");
+
+const fastifyInstance = fastify();
 
 const { fetchGraphQL } = require("./fetchFromApi");
 const { getSubscribers } = require("./queries");
@@ -47,7 +50,7 @@ const initChatsToNotify = async () => {
 
 initChatsToNotify();
 
-const expressApp = express();
+//const expressApp = express();
 
 const bot = new Telegraf(BOT_TOKEN, {
   // Telegram options
@@ -96,18 +99,25 @@ bot.command("/subscribe", ctx => {
 });
 
 workItemsCreatedHandler({ bot, state });
-userStoryChangedHandler({ app: expressApp, bot });
+userStoryChangedHandler({ app: fastifyInstance, bot });
 
-expressApp.use(
+fastifyInstance.use(
   bot.webhookCallback(
     "/telegraf/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9"
   )
 );
-expressApp.use(express.json());
 
-expressApp.get("/", (req, res) => res.send("Hello World!"));
+// expressApp.use(
+//   bot.webhookCallback(
+//     "/telegraf/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9"
+//   )
+// );
+// expressApp.use(express.json());
 
-expressApp.post("/deploymentCompleted", (req, res) => {
+//expressApp.get("/", (req, res) => res.send("Hello World!"));
+fastifyInstance.get("/", (req, reply) => reply.send("Hello World!"));
+
+fastifyInstance.post("/deploymentCompleted", (req, reply) => {
   console.log("req.body", req.body);
   const { createdDate, detailedMessage } = req.body;
 
@@ -128,10 +138,10 @@ expressApp.post("/deploymentCompleted", (req, res) => {
     }
   });
 
-  res.status(200).end();
+  reply.code(200).send();
 });
 
-expressApp.post("/pullRequestCommentPosted", (req, res) => {
+fastifyInstance.post("/pullRequestCommentPosted", (req, reply) => {
   console.log("req.body", req.body);
   const {
     createdDate,
@@ -160,9 +170,12 @@ expressApp.post("/pullRequestCommentPosted", (req, res) => {
     }
   });
 
-  res.status(200).end();
+  reply.code(200).send();
 });
 
-expressApp.listen(PORT, async () => {
+fastifyInstance.listen(PORT, async error => {
+  if (error) {
+    console.log("Error when starting the server", error);
+  }
   console.log(`app listening on port ${PORT}!`);
 });

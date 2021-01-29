@@ -25,7 +25,7 @@ const userStoryChangedHandler = ({ app, bot }) => {
     console.log({ hasTransitionedFromStagingToClosed });
 
     if (!hasTransitionedFromStagingToClosed) {
-      res.status(200).end();
+      res.code(200).send();
       return;
     }
 
@@ -42,7 +42,7 @@ const userStoryChangedHandler = ({ app, bot }) => {
       }
     });
 
-    res.status(200).end();
+    res.code(200).send();
   });
 };
 
