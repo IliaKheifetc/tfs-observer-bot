@@ -175,7 +175,7 @@ const start = async () => {
       reply.code(200).send();
     });
 
-    fastifyInstance.listen(PORT, async error => {
+    fastifyInstance.listen(PORT, "0.0.0.0", async error => {
       if (error) {
         console.log("Error when starting the server", error);
       }
