@@ -2,7 +2,7 @@ const { Telegraf } = require("telegraf");
 const Telegram = require("telegraf/telegram");
 //const express = require("express");
 const fastify = require("fastify");
-const middle = require("middle");
+const middie = require("middie");
 
 const { fetchGraphQL } = require("./fetchFromApi");
 const { getSubscribers } = require("./queries");
@@ -19,7 +19,7 @@ const { BOT_TOKEN, DEFAULT_CHAT_IDS, PORT, IS_TEST = false } = process.env;
 const start = async () => {
   const fastifyInstance = fastify();
   try {
-    await fastifyInstance.register(middle);
+    await fastifyInstance.register(middie);
 
     const telegram = new Telegram(BOT_TOKEN);
 
