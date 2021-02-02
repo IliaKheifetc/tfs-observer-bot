@@ -107,7 +107,7 @@ const start = async () => {
     });
 
     workItemsCreatedHandler({ bot, state });
-    userStoryChangedHandler({ app: fastifyInstance, bot });
+    userStoryChangedHandler({ app: fastifyInstance, bot, state });
 
     // expressApp.use(
     //   bot.webhookCallback(

@@ -1,4 +1,4 @@
-const userStoryChangedHandler = ({ app, bot }) => {
+const userStoryChangedHandler = ({ app, bot, state: { subscribers } }) => {
   app.post("/userStoryChanged", (req, res) => {
     console.log("userStoryChanged");
     console.log("req.body", req.body);
@@ -7,8 +7,6 @@ const userStoryChangedHandler = ({ app, bot }) => {
       message: { html } = {},
       resource: { _links, fields = {} } = {}
     } = req.body;
-
-    //console.log({ _links });
 
     for (let prop in fields) {
       console.log({ prop });
@@ -29,7 +27,7 @@ const userStoryChangedHandler = ({ app, bot }) => {
       return;
     }
 
-    state.subscribers.forEach(async subscriber => {
+    subscribers.forEach(async subscriber => {
       try {
         await bot.telegram.sendMessage(subscriber.chatId, html, {
           parse_mode: "HTML"
