@@ -9,21 +9,17 @@ const workItemsCreatedHandler = ({ bot, state: { subscribers } }) => {
       return;
     }
 
-    console.log("ctx", ctx);
-    console.log("ctx.update", ctx.update);
+    console.log("workItemsCreatedHandler subscribers", subscribers);
 
-    console.log("bot.telegram.sendMessage", bot.telegram.sendMessage);
-    console.log({ subscribers });
-
-    try {
-      subscribers.forEach(async subscriber => {
+    subscribers.forEach(async subscriber => {
+      try {
         await bot.telegram.sendMessage(subscriber.chatId, html, {
           parse_mode: "HTML"
         });
-      });
-    } catch (e) {
-      console.error("error", e);
-    }
+      } catch (e) {
+        console.error("error occurred when notifying about new work item: ", e);
+      }
+    });
   });
 };
 

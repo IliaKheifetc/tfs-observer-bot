@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "cross-env IS_TEST=true BOT_TOKEN=1390688805:AAFriFq0zJJRSsPi8smxo0gTMsk1-Oe9cQU nodemon index.js",
+    "dev": "cross-env IS_TEST=true BOT_TOKEN=1580134693:AAESxC1LpMub_qKxYCGTT1J489lT0bsZf3w nodemon index.js",
     "start": "node index.js"
   },
   "author": "",

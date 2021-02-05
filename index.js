@@ -23,13 +23,9 @@ const start = async () => {
 
     const telegram = new Telegram(BOT_TOKEN);
 
-    // let chatsToNotify = DEFAULT_CHAT_IDS
-    //   ? [...DEFAULT_CHAT_IDS.split(",").map(item => item.trim())]
-    //   : [];
-
     let state = { subscribers: [] };
 
-    const initChatsToNotify = async () => {
+    const initState = async () => {
       try {
         const { data } = await fetchGraphQL(getSubscribers, "MyQuery");
 
@@ -50,9 +46,7 @@ const start = async () => {
       }
     };
 
-    initChatsToNotify();
-
-    //const expressApp = express();
+    await initState();
 
     const bot = new Telegraf(BOT_TOKEN, {
       // Telegram options
@@ -61,7 +55,7 @@ const start = async () => {
     }); // https.Agent instance, allows custom proxy, certificate, keep alive, etc. // Reply via webhook
 
     bot.telegram.setWebhook(
-      "https://tfs-observer-telegram-bot.herokuapp.com/telegraf/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9"
+      "https://ad757ad3e3a9.ngrok.io/telegraf/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9"
     );
 
     fastifyInstance.use(
