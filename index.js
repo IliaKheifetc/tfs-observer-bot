@@ -3,18 +3,31 @@ const Telegram = require("telegraf/telegram");
 //const express = require("express");
 const fastify = require("fastify");
 const middie = require("middie");
+const { v4: uuidv4 } = require("uuid");
 
-const { fetchGraphQL } = require("./fetchFromApi");
-const { getSubscribers } = require("./queries");
-const { addSubscriber } = require("./mutations");
-const { formatDate } = require("./utils");
+require("./environmentVarsSetup");
+
+const HasuraDataSource = require("./dataSources/hasuraDataSource");
+const { getSubscribers } = require("./graphql/queries");
 
 const {
+  deploymentCompletedHandler,
+  getStagingUserStoriesHandler,
+  pullRequestCommentsHandler,
+  subscribeHandlers,
+  unsubscribeHandlers,
   userStoryChangedHandler,
-  workItemsCreatedHandler
+  workItemsCreatedHandler,
 } = require("./handlers/index");
 
-const { BOT_TOKEN, DEFAULT_CHAT_IDS, PORT, IS_TEST = false } = process.env;
+const { BOT_TOKEN, PORT, WEB_HOOK_URL_BASE, WEB_HOOK_SECRET } = process.env;
+const IS_TEST = process.env.IS_TEST === "true";
+const TEST_USERS_CHAT_IDS = [-392583350, 80464348];
+
+const { BOT_COMMANDS } = require("./constants");
+const { getCommandsList } = require("./utils");
+
+console.log("process.env", process.env);
 
 const start = async () => {
   const fastifyInstance = fastify();
@@ -25,84 +38,94 @@ const start = async () => {
 
     let state = { subscribers: [] };
 
+    const setCommands = async () => {
+      try {
+        const result = await telegram.setMyCommands(BOT_COMMANDS);
+        console.log("setMyCommands success");
+      } catch (e) {
+        console.log("error", e);
+      }
+
+      try {
+        const response = await telegram.getMyCommands();
+        console.log("response", response);
+      } catch (e) {
+        console.log("error", e);
+      }
+    };
+
     const initState = async () => {
       try {
-        const { data } = await fetchGraphQL(getSubscribers, "MyQuery");
+        const { data, errors } = await HasuraDataSource.post(
+          getSubscribers,
+          "MyQuery"
+        );
 
-        if (data && data.subscribers) {
-          state.subscribers.push(...data.subscribers);
+        if (errors) {
+          throw new Error(errors[0]?.message);
         }
 
+        if (data?.subscribers) {
+          state.subscribers.push(...data.subscribers);
+          state.subscribers.forEach((subscriber) => {
+            subscriber.subscriptions = new Set(subscriber.subscriptions);
+          });
+        }
+
+        state.subscribers.forEach((subscriber) => {
+          console.log("subscriber.subscriptions", subscriber.subscriptions);
+        });
+
         console.log({ IS_TEST });
-        console.log(typeof IS_TEST);
+
+        state.currentMaxId = state.subscribers.reduce(
+          (max, subscriber) => (subscriber.id > max ? subscriber.id : max),
+          0
+        );
 
         if (IS_TEST) {
-          state.subscribers = state.subscribers.slice(0, 2);
+          state.subscribers = state.subscribers.filter((subscriber) =>
+            TEST_USERS_CHAT_IDS.includes(subscriber.chatId)
+          );
         }
 
         console.log({ subscribers: state.subscribers });
       } catch (e) {
-        console.error("error", e);
+        console.error("error when requesting subscribers: ", e);
       }
     };
 
     await initState();
+    await setCommands();
 
     const bot = new Telegraf(BOT_TOKEN, {
       // Telegram options
       agent: null,
-      webhookReply: false
+      webhookReply: false,
     }); // https.Agent instance, allows custom proxy, certificate, keep alive, etc. // Reply via webhook
 
-    bot.telegram.setWebhook(
-      "https://ad757ad3e3a9.ngrok.io/telegraf/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9"
-    );
+    bot.telegram.setWebhook(`${WEB_HOOK_URL_BASE}${WEB_HOOK_SECRET}`);
 
-    fastifyInstance.use(
-      bot.webhookCallback(
-        "/telegraf/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9"
-      )
-    );
+    fastifyInstance.use(bot.webhookCallback(WEB_HOOK_SECRET));
 
-    bot.start(ctx => {
+    bot.start((ctx) => {
       console.log("subscribers to notify:", state.subscribers);
 
-      ctx.reply(
-        "Используйте команду /subscribe, чтобы подписаться на уведомление об изменениях"
+      const commandsList = getCommandsList(BOT_COMMANDS).join(",\n");
+
+      ctx.replyWithHTML(
+        `Бот поддерживает следующие команды:\n${commandsList}\n` +
+          `Описание команд можно посмотреть, написав / в поле для ввода сообщения или нажав на / в правой части этого поля`
       );
     });
 
-    bot.command("/subscribe", ctx => {
-      console.log("ctx", ctx);
-      const { id: chatId } = ctx.chat || {};
-
-      console.log("new chatId:", chatId);
-
-      // todo use appropriate mutation here!
-      if (!state.subscribers.some(subscriber => subscriber.chatId === chatId)) {
-        state.subscribers.push({ chatId });
-      }
-
-      try {
-        fetchGraphQL(addSubscriber, "ModifySubscribers", {
-          objects: [
-            {
-              id: state.subscribers.length + 1,
-              chatId,
-              name: "new_subscriber"
-            }
-          ]
-        });
-      } catch (e) {
-        console.error("error", e);
-      }
-
-      ctx.reply("Вы успешно подписались");
-    });
-
-    workItemsCreatedHandler({ bot, state });
+    subscribeHandlers({ bot, state });
+    unsubscribeHandlers({ bot, state });
+    getStagingUserStoriesHandler({ bot });
     userStoryChangedHandler({ app: fastifyInstance, bot, state });
-
+    deploymentCompletedHandler({ app: fastifyInstance, bot, state });
+    pullRequestCommentsHandler({ app: fastifyInstance, bot, state });
+    workItemsCreatedHandler({ app: fastifyInstance, bot, state });
     // expressApp.use(
     //   bot.webhookCallback(
     //     "/telegraf/07e4f521f4a38e9e50e08b3f8525efe23fc556fa9b6cb75ad2b987a612fce3e9"
@@ -110,66 +133,14 @@ const start = async () => {
     // );
     // expressApp.use(express.json());
 
-    //expressApp.get("/", (req, res) => res.send("Hello World!"));
+    bot.hears("check", async (ctx) => {
+      console.log("check");
+      await ctx.reply("what's up");
+    });
+
     fastifyInstance.get("/", (req, reply) => reply.send("Hello World!"));
 
-    fastifyInstance.post("/deploymentCompleted", (req, reply) => {
-      console.log("req.body", req.body);
-      const { createdDate, detailedMessage } = req.body;
-
-      state.subscribers.forEach(async subscriber => {
-        try {
-          await telegram.sendMessage(
-            subscriber.chatId,
-            `${detailedMessage.html}\n${createdDate}`,
-            {
-              parse_mode: "HTML"
-            }
-          );
-        } catch (e) {
-          console.error(
-            "error occurred when sending notification about completed deployment",
-            e
-          );
-        }
-      });
-
-      reply.code(200).send();
-    });
-
-    fastifyInstance.post("/pullRequestCommentPosted", (req, reply) => {
-      console.log("req.body", req.body);
-      const {
-        createdDate,
-        message: { html },
-        resource: {
-          comment: { author, content, publishedDate }
-        }
-      } = req.body;
-
-      const formattedDate = formatDate(publishedDate);
-
-      state.subscribers.slice(0, 2).forEach(async subscriber => {
-        try {
-          await telegram.sendMessage(
-            subscriber.chatId,
-            `${html}: "${content}", \n${formattedDate}`,
-            {
-              parse_mode: "HTML"
-            }
-          );
-        } catch (e) {
-          console.error(
-            "error occurred when sending notification about pr comment",
-            e
-          );
-        }
-      });
-
-      reply.code(200).send();
-    });
-
-    fastifyInstance.listen(PORT, "0.0.0.0", async error => {
+    fastifyInstance.listen(Number(PORT), "0.0.0.0", async (error) => {
       if (error) {
         console.log("Error when starting the server", error);
       }

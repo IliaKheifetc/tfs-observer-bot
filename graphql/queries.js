@@ -3,6 +3,7 @@ const getSubscribers = `query MyQuery {
     id
     name
     chatId
+    subscriptions
   }
 }`;
 

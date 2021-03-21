@@ -1,28 +1,40 @@
-const workItemsCreatedHandler = ({ bot, state: { subscribers } }) => {
-  bot.on("text", async function(ctx) {
+const { hasSubscription } = require("../utils");
+const { SUBSCRIPTION_TYPES } = require("../constants");
+
+const workItemsCreatedHandler = ({ app, bot, state: { subscribers } }) => {
+  app.post("/workItemCreated", async (req, res) => {
     const {
       publisherId,
       message: { text, html } = {},
-      resource: { url } = {}
-    } = ctx.update || {};
+      resource: { url } = {},
+    } = req.body || {};
+
     if (publisherId !== "tfs") {
       return;
     }
 
-    console.log("workItemsCreatedHandler subscribers", subscribers);
+    console.log({ req });
 
-    subscribers.forEach(async subscriber => {
+    console.log("workItemCreatedHandler subscribers", subscribers);
+
+    subscribers.forEach(async (subscriber) => {
+      if (!hasSubscription(subscriber, SUBSCRIPTION_TYPES.workItemCreated)) {
+        console.log("Subscriber is not subscribed ", subscriber);
+
+        return;
+      }
+
       try {
         await bot.telegram.sendMessage(subscriber.chatId, html, {
-          parse_mode: "HTML"
+          parse_mode: "HTML",
         });
       } catch (e) {
         console.error("error occurred when notifying about new work item: ", e);
       }
     });
+
+    res.code(200).send();
   });
 };
 
-module.exports = {
-  workItemsCreatedHandler
-};
+module.exports = workItemsCreatedHandler;
